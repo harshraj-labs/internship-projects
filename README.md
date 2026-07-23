@@ -2,11 +2,17 @@
 Backend AI Engineer internship assignments.
 
 ## Assignment 1 - First API Endpoint
-Minimal Express server with two JSON endpoints (`/hello`, `/bye`).
-
-Run it:
+### Task API:
+A simple CRUD Task API built using Express.js.
+### Installation
 npm install
+### Run
 node server.js
-
-Test it:
-curl http://localhost:3000/hello
+### API Documentation
+http://localhost:3000/docs
+### Endpoints"
+GET /tasks
+GET /tasks/:id
+POST /tasks
+PUT /tasks/:id
+DELETE /tasks/:id

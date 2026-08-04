@@ -42,12 +42,13 @@ app.get('/health', (req, res) => {
 });
 
 app.get('/tasks', (req, res) => {
+    const tasks = db.prepare('Select * FROM tasks').all();
     res.json(tasks);
 });
 
 app.get('/tasks/:id', (req, res) => {
     const id = Number(req.params.id);
-    const task = tasks.find(task => task.id === id);
+    const task = db.prepare('Select * FROM tasks WHERE id = ?').get(id);
     if (task) {
         res.status(200).json(task);
     } else {

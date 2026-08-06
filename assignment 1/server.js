@@ -59,16 +59,16 @@ app.get('/tasks/:id', (req, res) => {
 });
 
 app.post('/tasks', (req, res) => {
-    const new_id = tasks[tasks.length - 1].id + 1;
-
     if (req.body.title) {
-
+        const insert = db.prepare(
+            'INSERT INTO tasks (title,done) VALUES(?,?)'
+        );
+        const result = insert.run(req.body.title,0);
         const new_task = {
-            id: new_id,
+            id: result.lastInsertRowid,
             title: req.body.title,
             done: false
         };
-        tasks.push(new_task)
         res.status(201).json(new_task);
 
     } else {
@@ -80,8 +80,7 @@ app.post('/tasks', (req, res) => {
 
 app.put('/tasks/:id', (req, res) => {
     const id = Number(req.params.id);
-    const task = tasks.find(task => task.id === id);
-
+    const task = db.prepare('Select * FROM tasks WHERE id = ?').get(id);    
     if (!task) {
         return res.status(404).json({
             error: "Task not found"
@@ -102,7 +101,10 @@ app.put('/tasks/:id', (req, res) => {
                 error: "Title cannot be empty"
             });
         }
-        task.title = title;
+        const update = db.prepare(
+            'UPDATE tasks Set title = ? WHERE id =?'
+        );
+        const result = update.run(title,id);
     }
 
     if (done !== undefined) {
@@ -111,23 +113,30 @@ app.put('/tasks/:id', (req, res) => {
                 error: "Done must be true or false"
             });
         }
-        task.done = done;
+        const update = db.prepare(
+            'UPDATE tasks Set done = ? WHERE id =?'
+        );
+        const result = update.run(done ? 1:0,id);
     }
+    const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
 
-    res.status(200).json(task);
+    res.status(200).json(updatedTask);
 });
 
 app.delete('/tasks/:id', (req, res) => {
     const id = Number(req.params.id);
-    const index = tasks.findIndex(task => task.id === id);
 
-    if (index === -1) {
+    const remove = db.prepare(
+        'DELETE FROM tasks WHERE id = ?'
+    );
+
+    const result = remove.run(id);
+
+    if (result.changes === 0) {
         return res.status(404).json({
             error: "Task not found"
         });
     }
-
-    tasks.splice(index, 1);
 
     res.status(204).send();
 });

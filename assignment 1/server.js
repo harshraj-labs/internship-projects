@@ -1,6 +1,19 @@
+require('dotenv').config();
 const express = require('express');
+const {Client} = require('pg');
 const Database = require('better-sqlite3');
 const app = express();
+const client = new Client({
+    connectionString: process.env.DATABASE_URL
+});
+
+client.connect()
+    .then(() => {
+        console.log("Connected to PostgreSQL");
+    })
+    .catch((err) => {
+        console.error("PostgreSQL connection failed:", err);
+    });
 const db = new Database('tasks.db');
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./openapi.json');

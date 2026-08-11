@@ -1,36 +1,15 @@
 require('dotenv').config();
-console.log("DATABASE_URL =", process.env.DATABASE_URL);
+
 const express = require('express');
-const {Client} = require('pg');
 const app = express();
+
+const taskRepository = require('./repositories/taskRepository');
+
 const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./openapi.json');
-app.use(express.json())
-app.use('/docs',swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
-const client = new Client({
-    connectionString: process.env.DATABASE_URL
-});
-
-db.prepare(`
-    CREATE TABLE IF NOT EXISTS tasks (
-        id INTEGER PRIMARY KEY,
-        title TEXT NOT NULL,
-        done INTEGER NOT NULL
-    )
-`).run();
-
-const count = db.prepare('SELECT COUNT(*) AS total FROM tasks').get();
-
-if (count.total === 0) {
-    const insert = db.prepare(
-        'INSERT INTO tasks (title, done) VALUES (?, ?)'
-    );
-
-    insert.run('Study', 0);
-    insert.run('Gym', 1);
-    insert.run('Shopping', 0);
-}
+app.use(express.json());
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.get('/', (req, res) => {
     res.json({
@@ -46,14 +25,14 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.get('/tasks', (req, res) => {
-    const tasks = db.prepare('Select * FROM tasks').all();
+app.get('/tasks', async(req, res) => {
+    const tasks = await taskRepository.getAll();
     res.json(tasks);
 });
 
-app.get('/tasks/:id', (req, res) => {
+app.get('/tasks/:id', async(req, res) => {
     const id = Number(req.params.id);
-    const task = db.prepare('Select * FROM tasks WHERE id = ?').get(id);
+    const task = await taskRepository.getbyID(id);
     if (task) {
         res.status(200).json(task);
     } else {
@@ -63,17 +42,10 @@ app.get('/tasks/:id', (req, res) => {
     }
 });
 
-app.post('/tasks', (req, res) => {
+app.post('/tasks', async(req, res) => {
     if (req.body.title) {
-        const insert = db.prepare(
-            'INSERT INTO tasks (title,done) VALUES(?,?)'
-        );
-        const result = insert.run(req.body.title,0);
-        const new_task = {
-            id: result.lastInsertRowid,
-            title: req.body.title,
-            done: false
-        };
+        const newTask = await taskRepository.create(req.body.title);
+
         res.status(201).json(new_task);
 
     } else {
@@ -83,15 +55,8 @@ app.post('/tasks', (req, res) => {
     }
 });
 
-app.put('/tasks/:id', (req, res) => {
+app.put('/tasks/:id', async (req, res) => {
     const id = Number(req.params.id);
-    const task = db.prepare('Select * FROM tasks WHERE id = ?').get(id);    
-    if (!task) {
-        return res.status(404).json({
-            error: "Task not found"
-        });
-    }
-
     const { title, done } = req.body;
 
     if (title === undefined && done === undefined) {
@@ -100,44 +65,35 @@ app.put('/tasks/:id', (req, res) => {
         });
     }
 
-    if (title !== undefined) {
-        if (title === "") {
-            return res.status(400).json({
-                error: "Title cannot be empty"
-            });
-        }
-        const update = db.prepare(
-            'UPDATE tasks Set title = ? WHERE id =?'
-        );
-        const result = update.run(title,id);
+    if (title !== undefined && title === "") {
+        return res.status(400).json({
+            error: "Title cannot be empty"
+        });
     }
 
-    if (done !== undefined) {
-        if (typeof done !== "boolean") {
-            return res.status(400).json({
-                error: "Done must be true or false"
-            });
-        }
-        const update = db.prepare(
-            'UPDATE tasks Set done = ? WHERE id =?'
-        );
-        const result = update.run(done ? 1:0,id);
+    if (done !== undefined && typeof done !== "boolean") {
+        return res.status(400).json({
+            error: "Done must be true or false"
+        });
     }
-    const updatedTask = db.prepare('SELECT * FROM tasks WHERE id = ?').get(id);
+
+    const updatedTask = await taskRepository.update(id, title, done);
+
+    if (!updatedTask) {
+        return res.status(404).json({
+            error: "Task not found"
+        });
+    }
 
     res.status(200).json(updatedTask);
 });
 
-app.delete('/tasks/:id', (req, res) => {
+app.delete('/tasks/:id', async (req, res) => {
     const id = Number(req.params.id);
 
-    const remove = db.prepare(
-        'DELETE FROM tasks WHERE id = ?'
-    );
+    const deleted = await taskRepository.deleteTask(id);
 
-    const result = remove.run(id);
-
-    if (result.changes === 0) {
+    if (deleted === 0) {
         return res.status(404).json({
             error: "Task not found"
         });

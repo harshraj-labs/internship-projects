@@ -4,6 +4,13 @@ CREATE TABLE IF NOT EXISTS tasks (
     done BOOLEAN NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS users(
+    id SERIAL PRIMARY KEY,
+    email TEXT UNIQUE NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 INSERT INTO tasks (title, done)
 SELECT *
 FROM (

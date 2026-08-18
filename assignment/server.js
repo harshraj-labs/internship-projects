@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const express = require('express');
 const app = express();
-
+const authService = require('./services/authService');
 const taskRepository = require('./repositories/taskRepository');
 
 const swaggerUi = require('swagger-ui-express');
@@ -10,6 +10,9 @@ const swaggerDocument = require('./openapi.json');
 
 app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+
+app.post('/auth/register',async (req,res)=>{
+});
 
 app.get('/', (req, res) => {
     res.json({

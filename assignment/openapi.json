@@ -33,6 +33,47 @@
     }
   },
 
+  "/auth/register": {
+  "post": {
+    "summary": "Register a new user",
+    "requestBody": {
+      "required": true,
+      "content": {
+        "application/json": {
+          "schema": {
+            "type": "object",
+            "required": ["email", "password"],
+            "properties": {
+              "email": {
+                "type": "string",
+                "format": "email"
+              },
+              "password": {
+                "type": "string",
+                "format": "password"
+              }
+            }
+          }
+        }
+      }
+    },
+    "responses": {
+      "201": {
+        "description": "User registered successfully"
+      },
+      "400": {
+        "description": "Email and password are required"
+      },
+      "409": {
+        "description": "Email already registered"
+      },
+      "500": {
+        "description": "Internal server error"
+      }
+    }
+  }
+},
+
   "/tasks": {
     "get": {
       "summary": "Get all tasks",

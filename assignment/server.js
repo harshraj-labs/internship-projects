@@ -12,6 +12,28 @@ app.use(express.json());
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.post('/auth/register',async (req,res)=>{
+    try{
+        const {email,password} = req.body;
+
+        if (!email || !password){
+            return res.status(400).json({
+                error: "Email and Password are required"
+            });
+        }
+
+        const user = await authService.register(email,password);
+        res.status(201).json(user);
+    } catch (err){
+        if(err.code ==='23505'){
+            return res.status(409).json({
+                error: "Email already registered"
+            });
+        }
+        console.error(err);
+        res.status(500).json({
+            error: "Internal server error"
+        });
+    }
 });
 
 app.get('/', (req, res) => {

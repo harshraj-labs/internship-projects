@@ -1,5 +1,5 @@
 require('dotenv').config();
-
+const authenticateToken = require('./middleware/auth');
 const express = require('express');
 const app = express();
 const authService = require('./services/authService');
@@ -36,6 +36,31 @@ app.post('/auth/register',async (req,res)=>{
     }
 });
 
+app.post('/auth/login', async (req,res) =>{
+    try{
+        const {email,password} = req.body;
+        if (!email || !password){
+            return res.status(400).json({
+                error: 'Email and Password are required'
+            });
+        }
+        const token = await authService.login(email,password);
+        if (!token){
+            return res.status(401).json({
+                error: 'Invalid Email or Password'
+            });
+        }
+        res.status(200).json({
+            token
+        });
+    } catch (err){
+        console.error(err);
+        res.status(500).json({
+            error: 'Internal Server Error'
+        });
+    }
+});
+
 app.get('/', (req, res) => {
     res.json({
         name: "Task API",
@@ -50,12 +75,12 @@ app.get('/health', (req, res) => {
     });
 });
 
-app.get('/tasks', async(req, res) => {
+app.get('/tasks',authenticateToken, async(req, res) => {
     const tasks = await taskRepository.getAll();
     res.json(tasks);
 });
 
-app.get('/tasks/:id', async(req, res) => {
+app.get('/tasks/:id',authenticateToken, async(req, res) => {
     const id = Number(req.params.id);
     const task = await taskRepository.getbyID(id);
     if (task) {
@@ -67,7 +92,7 @@ app.get('/tasks/:id', async(req, res) => {
     }
 });
 
-app.post('/tasks', async(req, res) => {
+app.post('/tasks',authenticateToken, async(req, res) => {
     if (req.body.title) {
         const newTask = await taskRepository.create(req.body.title);
 
@@ -80,7 +105,7 @@ app.post('/tasks', async(req, res) => {
     }
 });
 
-app.put('/tasks/:id', async (req, res) => {
+app.put('/tasks/:id',authenticateToken, async (req, res) => {
     const id = Number(req.params.id);
     const { title, done } = req.body;
 
@@ -113,7 +138,7 @@ app.put('/tasks/:id', async (req, res) => {
     res.status(200).json(updatedTask);
 });
 
-app.delete('/tasks/:id', async (req, res) => {
+app.delete('/tasks/:id',authenticateToken, async (req, res) => {
     const id = Number(req.params.id);
 
     const deleted = await taskRepository.deleteTask(id);

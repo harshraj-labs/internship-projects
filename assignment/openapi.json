@@ -130,6 +130,16 @@
       }
     },
 
+    "/auth/logout":{
+      "post":{
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+
     "/tasks": {
       "get": {
         "summary": "Get all tasks",

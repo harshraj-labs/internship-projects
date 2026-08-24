@@ -61,6 +61,13 @@ app.post('/auth/login', async (req,res) =>{
     }
 });
 
+app.post('/auth/logout', authenticateToken ,(req,res)=>{
+    res.status(200).json({
+        message: "Logged out successfully!"
+    });
+
+});
+
 app.get('/', (req, res) => {
     res.json({
         name: "Task API",
@@ -96,7 +103,7 @@ app.post('/tasks',authenticateToken, async(req, res) => {
     if (req.body.title) {
         const newTask = await taskRepository.create(req.body.title);
 
-        res.status(201).json(new_task);
+        res.status(201).json(newTask);
 
     } else {
         res.status(400).json({

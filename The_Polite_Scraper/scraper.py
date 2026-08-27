@@ -1,5 +1,6 @@
 import time
 import requests
+import json
 from bs4 import BeautifulSoup
 from pydantic import BaseModel
 from pydantic import ValidationError
@@ -57,6 +58,9 @@ for page in range(1,4):
         print("Broken Page")
 
 print(len(all_book))
-print(type(all_book[0]))
-print(all_book[0])
-    
+if len(all_book) != 60:
+    print("Expected 60 books, got", len(all_book))
+    raise ValueError("Number of Books didn't match!")
+
+with open("output.json","w") as file:
+    json.dump(all_book,file, indent = 2)

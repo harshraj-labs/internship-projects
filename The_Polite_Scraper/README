@@ -1,0 +1,33 @@
+# The Polite Scraper
+
+A small Python scraper that collects 60 books from Books to Scrape and saves the cleaned data as JSON.
+
+## What it does
+
+- Scrapes 3 pages (20 books per page)
+- Extracts title, price, and availability
+- Converts prices like `£51.77` into `51.77`
+- Validates each book using Pydantic
+- Skips broken pages or invalid books without crashing
+- Waits 1 second between requests
+- Uses a custom User-Agent
+
+## Run
+
+Create and activate the virtual environment, then install dependencies:
+
+```bash
+pip install -r requirements.txt
+
+Run the scraper:
+
+python scraper.py
+
+The cleaned data is saved to:
+
+output.json
+Tech Stack
+Python
+Requests
+BeautifulSoup
+Pydantic
